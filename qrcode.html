@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .input-section, .output-section {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: white;
+            color: #666;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .color-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 256px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #qrcode canvas, #qrcode img {
+            border-radius: 10px;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .placeholder {
+            color: #999;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .placeholder-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .size-slider {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .size-value {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .error-correction {
+            margin-top: 15px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .history-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .history-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .history-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .history-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-type {
+            padding: 3px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .clear-history {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .clear-history:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ QR Code Generator</h1>
+        <p class="subtitle">다양한 형식의 QR코드를 쉽고 빠르게 생성하세요</p>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('text')">텍스트</button>
+                    <button class="tab" onclick="switchTab('url')">URL</button>
+                    <button class="tab" onclick="switchTab('email')">이메일</button>
+                    <button class="tab" onclick="switchTab('phone')">전화번호</button>
+                    <button class="tab" onclick="switchTab('wifi')">WiFi</button>
+                    <button class="tab" onclick="switchTab('sms')">SMS</button>
+                </div>
+
+                <div id="text-tab" class="tab-content active">
+                    <div class="input-group">
+                        <label>텍스트 입력</label>
+                        <textarea id="text-input" placeholder="QR코드로 변환할 텍스트를 입력하세요...">안녕하세요! QR코드 생성기입니다.</textarea>
+                    </div>
+                </div>
+
+                <div id="url-tab" class="tab-content">
+                    <div class="input-group">
+                        <label>URL 주소</label>
+                        <input type="url" id="url-input" placeholder="https://example.com">
+                    </div>
+                </div>
+
+                <div id="email-tab" class="tab-content">
+                    <div class="input-group">
+                        <label>이메일 주소</label>
+                        <input type="email" id="email-address" placeholder="example@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>제목</label>
+                        <input type="text" id="email-subject" placeholder="이메일 제목">
+                    </div>
+                    <div class="input-group">
+                        <label>본문</label>
+                        <textarea id="email-body" placeholder="이메일 내용"></textarea>
+                    </div>
+                </div>
+
+                <div id="phone-tab" class="tab-content">
+                    <div class="input-group">
+                        <label>전화번호</label>
+                        <input type="tel" id="phone-input" placeholder="+82-10-1234-5678">
+                    </div>
+                </div>
+
+                <div id="wifi-tab" class="tab-content">
+                    <div class="input-group">
+                        <label>네트워크 이름 (SSID)</label>
+                        <input type="text" id="wifi-ssid" placeholder="WiFi 이름">
+                    </div>
+                    <div class="input-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="wifi-password" placeholder="WiFi 비밀번호">
+                    </div>
+                    <div class="input-group">
+                        <label>보안 유형</label>
+                        <select id="wifi-security">
+                            <option value="WPA">WPA/WPA2</option>
+                            <option value="WEP">WEP</option>
+                            <option value="nopass">없음</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="sms-tab" class="tab-content">
+                    <div class="input-group">
+                        <label>전화번호</label>
+                        <input type="tel" id="sms-phone" placeholder="+82-10-1234-5678">
+                    </div>
+                    <div class="input-group">
+                        <label>메시지</label>
+                        <textarea id="sms-message" placeholder="SMS 메시지 내용"></textarea>
+                    </div>
+                </div>
+
+                <div class="options-grid">
+                    <div class="input-group">
+                        <label>크기</label>
+                        <input type="range" id="size-slider" class="size-slider" min="128" max="512" value="256" step="32">
+                        <div class="size-value" id="size-value">256 x 256</div>
+                    </div>
+                    <div class="input-group">
+                        <label>여백</label>
+                        <input type="number" id="margin-input" min="0" max="10" value="4">
+                    </div>
+                    <div class="color-input-group">
+                        <label>전경색</label>
+                        <input type="color" id="fg-color" value="#000000">
+                    </div>
+                    <div class="color-input-group">
+                        <label>배경색</label>
+                        <input type="color" id="bg-color" value="#FFFFFF">
+                    </div>
+                </div>
+
+                <div class="error-correction">
+                    <label>오류 정정 레벨</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="error-level" value="L" checked>
+                            <span>낮음 (7%)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="error-level" value="M">
+                            <span>중간 (15%)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="error-level" value="Q">
+                            <span>높음 (25%)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="error-level" value="H">
+                            <span>최고 (30%)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="generate-btn" onclick="generateQR()">QR 코드 생성</button>
+            </div>
+
+            <div class="output-section">
+                <div id="qrcode">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📱</div>
+                        <p>QR코드가 여기에 표시됩니다</p>
+                    </div>
+                </div>
+                
+                <div class="download-section" id="download-section" style="display: none;">
+                    <button class="download-btn" onclick="downloadQR('png')">PNG 다운로드</button>
+                    <button class="download-btn" onclick="downloadQR('jpg')">JPG 다운로드</button>
+                    <button class="download-btn" onclick="copyToClipboard()">이미지 복사</button>
+                </div>
+
+                <div class="history-section">
+                    <div class="history-title">📝 최근 생성 기록</div>
+                    <div class="history-list" id="history-list"></div>
+                    <button class="clear-history" onclick="clearHistory()">기록 삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'text';
+        let qrCode = null;
+        let history = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+            updateSizeValue();
+            
+            // Add event listeners
+            document.getElementById('size-slider').addEventListener('input', updateSizeValue);
+            
+            // Generate initial QR code
+            generateQR();
+        });
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function updateSizeValue() {
+            const size = document.getElementById('size-slider').value;
+            document.getElementById('size-value').textContent = `${size} x ${size}`;
+        }
+
+        function generateQR() {
+            let data = '';
+            
+            // Get data based on current tab
+            switch(currentTab) {
+                case 'text':
+                    data = document.getElementById('text-input').value;
+                    break;
+                case 'url':
+                    data = document.getElementById('url-input').value;
+                    break;
+                case 'email':
+                    const email = document.getElementById('email-address').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    data = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    break;
+                case 'phone':
+                    data = `tel:${document.getElementById('phone-input').value}`;
+                    break;
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value;
+                    const password = document.getElementById('wifi-password').value;
+                    const security = document.getElementById('wifi-security').value;
+                    data = `WIFI:T:${security};S:${ssid};P:${password};;`;
+                    break;
+                case 'sms':
+                    const smsPhone = document.getElementById('sms-phone').value;
+                    const smsMessage = document.getElementById('sms-message').value;
+                    data = `sms:${smsPhone}?body=${encodeURIComponent(smsMessage)}`;
+                    break;
+            }
+            
+            if (!data) {
+                alert('내용을 입력해주세요!');
+                return;
+            }
+            
+            // Get options
+            const size = parseInt(document.getElementById('size-slider').value);
+            const margin = parseInt(document.getElementById('margin-input').value);
+            const fgColor = document.getElementById('fg-color').value;
+            const bgColor = document.getElementById('bg-color').value;
+            const errorLevel = document.querySelector('input[name="error-level"]:checked').value;
+            
+            // Clear previous QR code
+            document.getElementById('qrcode').innerHTML = '';
+            
+            // Generate new QR code
+            qrCode = new QRCode(document.getElementById('qrcode'), {
+                text: data,
+                width: size,
+                height: size,
+                colorDark: fgColor,
+                colorLight: bgColor,
+                correctLevel: QRCode.CorrectLevel[errorLevel],
+                margin: margin
+            });
+            
+            // Show download section
+            document.getElementById('download-section').style.display = 'flex';
+            
+            // Add to history
+            addToHistory(data, currentTab);
+            
+            // Animation effect
+            document.getElementById('qrcode').style.animation = 'none';
+            setTimeout(() => {
+                document.getElementById('qrcode').style.animation = 'fadeIn 0.5s';
+            }, 10);
+        }
+
+        function downloadQR(format) {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) {
+                alert('먼저 QR코드를 생성해주세요!');
+                return;
+            }
+            
+            // Create temporary canvas for white background
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            // Fill white background
+            tempCtx.fillStyle = document.getElementById('bg-color').value;
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Draw QR code
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // Convert to desired format
+            const link = document.createElement('a');
+            if (format === 'png') {
+                link.download = `qrcode_${Date.now()}.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+            } else {
+                link.download = `qrcode_${Date.now()}.jpg`;
+                link.href = tempCanvas.toDataURL('image/jpeg', 0.95);
+            }
+            
+            link.click();
+        }
+
+        function copyToClipboard() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) {
+                alert('먼저 QR코드를 생성해주세요!');
+                return;
+            }
+            
+            canvas.toBlob(function(blob) {
+                const item = new ClipboardItem({'image/png': blob});
+                navigator.clipboard.write([item]).then(function() {
+                    // Visual feedback
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ 복사됨!';
+                    btn.style.background = '#4caf50';
+                    btn.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '';
+                        btn.style.color = '';
+                    }, 2000);
+                }).catch(function(error) {
+                    alert('클립보드 복사에 실패했습니다.');
+                });
+            });
+        }
+
+        function addToHistory(data, type) {
+            const historyItem = {
+                data: data,
+                type: type,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            history.unshift(historyItem);
+            if (history.length > 10) {
+                history = history.slice(0, 10);
+            }
+            
+            saveHistory();
+            displayHistory();
+        }
+
+        function saveHistory() {
+            // Using in-memory storage instead of localStorage
+            // In a real application, you would use localStorage
+        }
+
+        function loadHistory() {
+            // In-memory storage
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #999;">아직 생성 기록이 없습니다</div>';
+                return;
+            }
+            
+            history.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.onclick = () => loadFromHistory(index);
+                
+                let displayText = item.data;
+                if (displayText.length > 30) {
+                    displayText = displayText.substring(0, 30) + '...';
+                }
+                
+                historyItem.innerHTML = `
+                    <span class="history-text">${displayText}</span>
+                    <span class="history-type">${item.type.toUpperCase()}</span>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        function loadFromHistory(index) {
+            const item = history[index];
+            
+            // Switch to appropriate tab
+            switchTab(item.type);
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase().includes(item.type)) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Fill in the data
+            switch(item.type) {
+                case 'text':
+                    document.getElementById('text-input').value = item.data;
+                    break;
+                case 'url':
+                    document.getElementById('url-input').value = item.data;
+                    break;
+                // Add other cases as needed
+            }
+            
+            // Generate QR code
+            generateQR();
+        }
+
+        function clearHistory() {
+            if (confirm('모든 기록을 삭제하시겠습니까?')) {
+                history = [];
+                saveHistory();
+                displayHistory();
+            }
+        }
+    </script>
+</body>
+</html>
